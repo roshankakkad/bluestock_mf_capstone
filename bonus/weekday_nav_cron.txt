@@ -1,0 +1,3 @@
+# B1 - Cron schedule for weekday NAV refresh at 8 PM
+# Edit the path to match your local project directory.
+0 20 * * 1-5 cd /path/to/bluestock_mf_capstone && /usr/bin/python3 scripts/live_nav_fetch.py >> logs/nav_fetch.log 2>&1

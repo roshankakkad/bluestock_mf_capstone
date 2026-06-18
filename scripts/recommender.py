@@ -1,3 +1,9 @@
+"""Recommend mutual funds based on risk appetite and Sharpe ratio.
+
+This utility supports Day 6 advanced analytics by reading the cleaned performance
+data when available and falling back to the raw scheme performance file.
+"""
+
 import pandas as pd
 from pathlib import Path
 
@@ -6,6 +12,7 @@ FALLBACK_PATH = Path(__file__).resolve().parents[1] / "data" / "raw" / "07_schem
 
 
 def load_performance_data():
+    """Load cleaned performance data, or fall back to the raw performance file."""
     if DATA_PATH.exists():
         return pd.read_csv(DATA_PATH)
     return pd.read_csv(FALLBACK_PATH)
@@ -20,7 +27,7 @@ def recommend_funds(risk_appetite="Moderate", top_n=3):
     matches = df[df[risk_col].astype(str).str.title() == risk_appetite].copy()
 
     if matches.empty:
-        print("No funds found for risk appetite: {risk_appetite}")
+        print(f"No funds found for risk appetite: {risk_appetite}")
         print("Try Low, Moderate, High or Very High depending on available data.")
         return pd.DataFrame()
 

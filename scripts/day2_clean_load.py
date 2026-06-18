@@ -1,3 +1,9 @@
+"""Clean raw datasets, create analytical tables, and load the SQLite warehouse.
+
+The script keeps the project logic from Day 2 unchanged: it cleans raw CSVs,
+writes processed CSV files, builds dim_date, and loads tables into data/db/bluestock_mf.db.
+"""
+
 from pathlib import Path
 import sqlite3
 import pandas as pd
@@ -32,10 +38,12 @@ FILES = {
 
 
 def read_csv(name):
+    """Read a configured raw CSV file by logical dataset name."""
     return pd.read_csv(RAW_DIR / FILES[name])
 
 
 def clean_fund_master():
+    """Clean fund master records and standardize data types."""
     df = read_csv("fund_master")
     df = df.drop_duplicates().copy()
     df["amfi_code"] = df["amfi_code"].astype(str)
@@ -47,6 +55,7 @@ def clean_fund_master():
 
 
 def clean_nav_history():
+    """Clean NAV history, fill daily gaps, and compute daily returns."""
     df = read_csv("nav_history")
     df = df.drop_duplicates().copy()
     df["amfi_code"] = df["amfi_code"].astype(str)
@@ -73,6 +82,7 @@ def clean_nav_history():
 
 
 def clean_transactions():
+    """Clean investor transaction records and standardize categories."""
     df = read_csv("transactions")
     df = df.drop_duplicates().copy()
     df["amfi_code"] = df["amfi_code"].astype(str)
@@ -97,6 +107,7 @@ def clean_transactions():
 
 
 def clean_performance():
+    """Clean scheme performance metrics and add quality flags."""
     df = read_csv("performance")
     df = df.drop_duplicates().copy()
     df["amfi_code"] = df["amfi_code"].astype(str)
@@ -114,6 +125,7 @@ def clean_performance():
 
 
 def clean_other_files():
+    """Clean supporting industry, portfolio, SIP, folio and benchmark files."""
     cleaned = {}
 
     aum = read_csv("aum").drop_duplicates().copy()
@@ -156,6 +168,7 @@ def clean_other_files():
 
 
 def create_dim_date(*dataframes):
+    """Create a reusable date dimension from date-bearing fact tables."""
     date_values = []
     for df, col in dataframes:
         date_values.extend(pd.to_datetime(df[col], errors="coerce").dropna().tolist())
@@ -170,12 +183,14 @@ def create_dim_date(*dataframes):
 
 
 def save_cleaned_files(tables):
+    """Save cleaned tables to the processed data folder."""
     for filename, df in tables.items():
         df.to_csv(PROCESSED_DIR / filename, index=False)
         print(f"Saved {filename}: {df.shape[0]} rows")
 
 
 def load_to_sqlite(tables):
+    """Load cleaned analytical tables into the SQLite database."""
     db_path = DB_DIR / "bluestock_mf.db"
 
     table_map = {
@@ -218,6 +233,7 @@ def load_to_sqlite(tables):
 
 
 def main():
+    """Execute the complete Day 2 cleaning and database loading workflow."""
     fund = clean_fund_master()
     nav = clean_nav_history()
     tx = clean_transactions()
